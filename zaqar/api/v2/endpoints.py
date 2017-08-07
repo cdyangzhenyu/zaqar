@@ -31,6 +31,7 @@ class Endpoints(object):
     """v2 API Endpoints."""
 
     def __init__(self, storage, control, validate, defaults):
+        self._topic_controller = storage.topic_controller
         self._queue_controller = storage.queue_controller
         self._message_controller = storage.message_controller
         self._claim_controller = storage.claim_controller
@@ -43,6 +44,45 @@ class Endpoints(object):
 
         self._defaults = defaults
         self._subscription_url = None
+
+    # Topics
+    @api_utils.on_exception_sends_500
+    def topic_list(self, req):
+        """Gets a list of topics
+
+        :param req: Request instance ready to be sent.
+        :type req: `api.common.Request`
+        :return: resp: Response instance
+        :type: resp: `api.common.Response`
+        """
+        project_id = req._headers.get('X-Project-ID')
+
+        LOG.debug(u'Topic list - project: %(project)s',
+                  {'project': project_id})
+
+        try:
+            kwargs = api_utils.get_headers(req)
+
+            self._validate.topic_listing(**kwargs)
+            results = self._topic_controller.list(
+                project=project_id, **kwargs)
+            # Buffer list of topics. Can raise NoPoolFound error.
+            topics = list(next(results))
+        except (ValueError, validation.ValidationFailed) as ex:
+            LOG.debug(ex)
+            headers = {'status': 400}
+            return api_utils.error_response(req, ex, headers)
+        except storage_errors.ExceptionBase as ex:
+            LOG.exception(ex)
+            error = 'Topics could not be listed.'
+            headers = {'status': 503}
+            return api_utils.error_response(req, ex, headers, error)
+
+        # Got some. Prepare the response.
+        body = {'queues': queues}
+        headers = {'status': 200}
+
+        return response.Response(req, body, headers)
 
     # Queues
     @api_utils.on_exception_sends_500

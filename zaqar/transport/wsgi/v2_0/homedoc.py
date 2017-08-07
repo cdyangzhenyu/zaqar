@@ -87,6 +87,36 @@ JSON_HOME = {
         },
 
         # -----------------------------------------------------------------
+        # Topics
+        # -----------------------------------------------------------------
+        'rel/topics': {
+            'href-template': '/v2/topics{?marker,limit,detailed}',
+            'href-vars': {
+                'marker': 'param/marker',
+                'limit': 'param/topic_limit',
+                'detailed': 'param/detailed',
+            },
+            'hints': {
+                'allow': ['GET'],
+                'formats': {
+                    'application/json': {},
+                },
+            },
+        },
+        'rel/topic': {
+            'href-template': '/v2/topics/{topic_name}',
+            'href-vars': {
+                'topic_name': 'param/topic_name',
+            },
+            'hints': {
+                'allow': ['GET', 'PUT', 'DELETE', 'PATCH'],
+                'formats': {
+                    'application/json': {},
+                },
+            },
+        },
+
+        # -----------------------------------------------------------------
         # Messages
         # -----------------------------------------------------------------
         'rel/messages': {

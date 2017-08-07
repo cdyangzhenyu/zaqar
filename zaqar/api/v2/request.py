@@ -123,4 +123,25 @@ class RequestSchema(v1_1.RequestSchema):
             },
             'required': ['action', 'headers', 'body']
         },
+        
+        # Topics
+        consts.TOPIC_LIST: {
+            'properties': {
+                'action': {'enum': [consts.TOPIC_LIST]},
+                'headers': {
+                    'type': 'object',
+                    'properties': headers,
+                    'required': ['Client-ID', 'X-Project-ID']
+                },
+                'body': {
+                    'type': 'object',
+                    'properties': {
+                        'marker': {'type': 'string'},
+                        'limit': {'type': 'integer'},
+                        'detailed': {'type': 'boolean'}
+                    }
+                }
+            },
+            'required': ['action', 'headers']
+        },
     })

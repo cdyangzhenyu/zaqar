@@ -99,6 +99,59 @@ class ResponseSchema(api.Api):
                 'additionalProperties': False,
             },
 
+            consts.TOPIC_LIST: {
+                'type': 'object',
+                'properties': {
+                    'links': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'object',
+                            'properties': {
+                                'rel': {
+                                    'type': 'string',
+                                    'enum': ['next'],
+                                },
+                                'href': {
+                                    'type': 'string',
+                                    "pattern": "^/v2/topics\?",
+                                }
+                            },
+                            'required': ['rel', 'href'],
+                            'additionalProperties': False,
+                        },
+                        'minItems': 1,
+                        'maxItems': 1,
+                    },
+
+                    'topics': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'object',
+                            'properties': {
+                                'name': {
+                                    'type': 'string',
+                                    'pattern': '^[a-zA-Z0-9_-]{1,64}$'
+                                },
+                                'href': {
+                                    'type': 'string',
+                                    'pattern': '^/v2/topics/'
+                                               '[a-zA-Z0-9_-]{1,64}$',
+                                },
+                                'metadata': {
+                                    'type': 'object',
+                                }
+                            },
+                            'required': ['name', 'href'],
+                            'additionalProperties': False,
+                        },
+                        'minItems': 1,
+                        'maxItems': self.limits.max_topics_per_page,
+                    }
+                },
+                'required': ['links', 'topics'],
+                'additionalProperties': False,
+            },
+
             consts.QUEUE_LIST: {
                 'type': 'object',
                 'properties': {

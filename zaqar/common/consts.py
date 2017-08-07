@@ -115,3 +115,9 @@ FLAVOR_OPS = (
     'flavor_update',
     'flavor_delete',
 )
+
+TOPIC_OPS = (
+    TOPIC_LIST,
+) = (
+    'topic_list',
+)
