@@ -118,6 +118,40 @@ class Endpoints(object):
             body = _('Topic %s created.') % topic_name
             headers = {'status': 201} if created else {'status': 204}
             return response.Response(req, body, headers)
+        
+    @api_utils.on_exception_sends_500
+    def topic_get(self, req):
+        """Gets a topic
+
+        :param req: Request instance ready to be sent.
+        :type req: `api.common.Request`
+        :return: resp: Response instance
+        :type: resp: `api.common.Response`
+        """
+        project_id = req._headers.get('X-Project-ID')
+        topic_name = req._body.get('topic_name')
+
+        LOG.debug(u'Topic get - topic: %(topic)s, '
+                  u'project: %(project)s',
+                  {'topic': topic_name, 'project': project_id})
+
+        try:
+            resp_dict = self._topic_controller.get(topic_name,
+                                                   project=project_id)
+        except storage_errors.DoesNotExist as ex:
+            LOG.debug(ex)
+            error = _('Topic %s does not exist.') % topic_name
+            headers = {'status': 404}
+            return api_utils.error_response(req, ex, headers, error)
+        except storage_errors.ExceptionBase as ex:
+            LOG.exception(ex)
+            headers = {'status': 503}
+            error = _('Cannot retrieve topic %s.') % topic_name
+            return api_utils.error_response(req, ex, headers, error)
+        else:
+            body = resp_dict
+            headers = {'status': 200}
+            return response.Response(req, body, headers)
 
     # Queues
     @api_utils.on_exception_sends_500

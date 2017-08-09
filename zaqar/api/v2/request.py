@@ -162,4 +162,23 @@ class RequestSchema(v1_1.RequestSchema):
             },
             'required': ['action', 'headers', 'body']
         },
+        
+        consts.TOPIC_GET: {
+            'properties': {
+                'action': {'enum': [consts.TOPIC_GET]},
+                'headers': {
+                    'type': 'object',
+                    'properties': headers,
+                    'required': ['Client-ID', 'X-Project-ID']
+                },
+                'body': {
+                    'type': 'object',
+                    'properties': {
+                        'topic_name': {'type': 'string'},
+                    },
+                    'required': ['topic_name'],
+                }
+            },
+            'required': ['action', 'headers', 'body']
+        },
     })

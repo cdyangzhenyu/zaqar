@@ -119,7 +119,9 @@ FLAVOR_OPS = (
 TOPIC_OPS = (
     TOPIC_CREATE,
     TOPIC_LIST,
+    TOPIC_GET,
 ) = (
     'topic_create',
     'topic_list',
+    'topic_get',
 )
