@@ -120,8 +120,10 @@ TOPIC_OPS = (
     TOPIC_CREATE,
     TOPIC_LIST,
     TOPIC_GET,
+    TOPIC_DELETE,
 ) = (
     'topic_create',
     'topic_list',
     'topic_get',
+    'topic_delete',
 )

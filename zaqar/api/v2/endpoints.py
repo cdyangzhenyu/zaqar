@@ -152,6 +152,32 @@ class Endpoints(object):
             body = resp_dict
             headers = {'status': 200}
             return response.Response(req, body, headers)
+        
+    @api_utils.on_exception_sends_500
+    def topic_delete(self, req):
+        """Deletes a topic
+
+        :param req: Request instance ready to be sent.
+        :type req: `api.common.Request`
+        :return: resp: Response instance
+        :type: resp: `api.common.Response`
+        """
+        project_id = req._headers.get('X-Project-ID')
+        topic_name = req._body.get('topic_name')
+
+        LOG.debug(u'Topic delete - topic: %(topic)s, project: %(project)s',
+                  {'topic': topic_name, 'project': project_id})
+        try:
+            self._topic_controller.delete(topic_name, project=project_id)
+        except storage_errors.ExceptionBase as ex:
+            LOG.exception(ex)
+            error = _('Topic %s could not be deleted.') % topic_name
+            headers = {'status': 503}
+            return api_utils.error_response(req, ex, headers, error)
+        else:
+            body = _('Topic %s removed.') % topic_name
+            headers = {'status': 204}
+            return response.Response(req, body, headers)
 
     # Queues
     @api_utils.on_exception_sends_500
