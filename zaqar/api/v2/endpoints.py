@@ -83,6 +83,41 @@ class Endpoints(object):
         headers = {'status': 200}
 
         return response.Response(req, body, headers)
+    
+    @api_utils.on_exception_sends_500
+    def topic_create(self, req):
+        """Creates a topic
+
+        :param req: Request instance ready to be sent.
+        :type req: `api.common.Request`
+        :return: resp: Response instance
+        :type: resp: `api.common.Response`
+        """
+        project_id = req._headers.get('X-Project-ID')
+        topic_name = req._body.get('topic_name')
+        metadata = req._body.get('metadata', {})
+
+        LOG.debug(u'Topic create - topic: %(topic)s, project: %(project)s',
+                  {'topic': topic_name,
+                   'project': project_id})
+
+        try:
+            created = self._topic_controller.create(topic_name,
+                                                    metadata=metadata,
+                                                    project=project_id)
+        except validation.ValidationFailed as ex:
+            LOG.debug(ex)
+            headers = {'status': 400}
+            return api_utils.error_response(req, ex, headers)
+        except storage_errors.ExceptionBase as ex:
+            LOG.exception(ex)
+            error = _('Topic %s could not be created.') % topic_name
+            headers = {'status': 503}
+            return api_utils.error_response(req, ex, headers, error)
+        else:
+            body = _('Topic %s created.') % topic_name
+            headers = {'status': 201} if created else {'status': 204}
+            return response.Response(req, body, headers)
 
     # Queues
     @api_utils.on_exception_sends_500
@@ -141,7 +176,7 @@ class Endpoints(object):
                    'project': project_id})
 
         try:
-            self._validate.queue_identification(queue_name, project_id)
+            self._validate.identification(queue_name, project_id)
             self._validate.queue_metadata_length(len(str(metadata)))
             self._validate.queue_metadata_putting(metadata)
             created = self._queue_controller.create(queue_name,
@@ -474,7 +509,7 @@ class Endpoints(object):
                 queue_meta = self._queue_controller.get_metadata(queue_name,
                                                                  project_id)
             except storage_errors.DoesNotExist as ex:
-                self._validate.queue_identification(queue_name, project_id)
+                self._validate.identification(queue_name, project_id)
                 self._queue_controller.create(queue_name, project=project_id)
                 # NOTE(flwang): Queue is created in lazy mode, so no metadata
                 # set.
@@ -911,7 +946,7 @@ class Endpoints(object):
                     'options': options,
                     'ttl': ttl}
             self._validate.subscription_posting(data)
-            self._validate.queue_identification(queue_name, project_id)
+            self._validate.identification(queue_name, project_id)
             if not self._queue_controller.exists(queue_name, project_id):
                 self._queue_controller.create(queue_name, project=project_id)
             created = self._subscription_controller.create(queue_name,

@@ -72,7 +72,7 @@ class TopicController(storage.Topic):
     def _list(self, project=None, marker=None,
               limit=storage.DEFAULT_TOPICS_PER_PAGE, detailed=False):
 
-        query = utils.scoped_query(marker, project)
+        query = utils.scoped_query(marker, project, key='p_t')
 
         projection = {'p_t': 1, '_id': 0}
         if detailed:
@@ -83,7 +83,7 @@ class TopicController(storage.Topic):
         marker_name = {}
 
         def normalizer(record):
-            topic = {'name': utils.descope_topic_name(record['p_t'])}
+            topic = {'name': utils.descope_name(record['p_t'])}
             marker_name['next'] = topic['name']
             if detailed:
                 topic['metadata'] = record['m']
@@ -91,3 +91,17 @@ class TopicController(storage.Topic):
 
         yield utils.HookedCursor(cursor, normalizer)
         yield marker_name and marker_name['next']
+        
+    @utils.raises_conn_error
+    def _create(self, name, metadata=None, project=None):
+        try:
+            counter = {'v': 1, 't': 0}
+
+            scoped_name = utils.scope_name(name, project)
+            self._collection.insert({'p_t': scoped_name, 'm': metadata or {},
+                                     'c': counter})
+
+        except pymongo.errors.DuplicateKeyError:
+            return False
+        else:
+            return True

@@ -68,6 +68,37 @@ class ItemResource(object):
 
         resp.body = utils.to_json(resp_dict)
         # status defaults to 200
+        
+    @decorators.TransportLog("Topics item")
+    @acl.enforce("topics:create")
+    def on_put(self, req, resp, project_id, topic_name):
+        try:
+            # Deserialize topic metadata
+            metadata = None
+            if req.content_length:
+                document = wsgi_utils.deserialize(req.stream,
+                                                  req.content_length)
+                metadata = wsgi_utils.sanitize(document, spec=None)
+            self._validate.queue_metadata_putting(metadata)
+        except validation.ValidationFailed as ex:
+            LOG.debug(ex)
+            raise wsgi_errors.HTTPBadRequestAPI(six.text_type(ex))
+
+        try:
+            created = self._topic_controller.create(topic_name,
+                                                    metadata=metadata,
+                                                    project=project_id)
+
+        except storage_errors.FlavorDoesNotExist as ex:
+            LOG.exception(ex)
+            raise wsgi_errors.HTTPBadRequestAPI(six.text_type(ex))
+        except Exception as ex:
+            LOG.exception(ex)
+            description = _(u'Topic could not be created.')
+            raise wsgi_errors.HTTPServiceUnavailable(description)
+
+        resp.status = falcon.HTTP_201 if created else falcon.HTTP_204
+        resp.location = req.path
 
 
 class CollectionResource(object):

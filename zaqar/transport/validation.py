@@ -95,8 +95,8 @@ _TRANSPORT_LIMITS_GROUP = 'transport'
 
 # NOTE(kgriffs): Don't use \w because it isn't guaranteed to match
 # only ASCII characters.
-QUEUE_NAME_REGEX = re.compile('^[a-zA-Z0-9_\-]+$')
-QUEUE_NAME_MAX_LEN = 64
+NAME_REGEX = re.compile('^[a-zA-Z0-9_\-]+$')
+NAME_MAX_LEN = 64
 PROJECT_ID_MAX_LEN = 256
 
 
@@ -120,7 +120,7 @@ class Validator(object):
         self._limits_conf = self._conf[_TRANSPORT_LIMITS_GROUP]
         self._supported_operations = ('add', 'remove', 'replace')
 
-    def queue_identification(self, queue, project):
+    def identification(self, queue, project):
         """Restrictions on a project id & queue name pair.
 
         :param queue: Name of the queue
@@ -135,11 +135,11 @@ class Validator(object):
             msg = _(u'Project ids may not be more than {0} characters long.')
             raise ValidationFailed(msg, PROJECT_ID_MAX_LEN)
 
-        if len(queue) > QUEUE_NAME_MAX_LEN:
+        if len(queue) > NAME_MAX_LEN:
             msg = _(u'Queue names may not be more than {0} characters long.')
-            raise ValidationFailed(msg, QUEUE_NAME_MAX_LEN)
+            raise ValidationFailed(msg, NAME_MAX_LEN)
 
-        if not QUEUE_NAME_REGEX.match(queue):
+        if not NAME_REGEX.match(queue):
             raise ValidationFailed(
                 _(u'Queue names may only contain ASCII letters, digits, '
                   'underscores, and dashes.'))

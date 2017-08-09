@@ -77,19 +77,19 @@ class MongodbUtilsTest(MongodbSetupMixin, testing.TestBase):
         self.driver = MockDriver(self.mongodb_conf)
         self.control_driver = MockDriver(self.mongodb_conf)
 
-    def test_scope_queue_name(self):
-        self.assertEqual('/my-q', utils.scope_queue_name('my-q'))
-        self.assertEqual('/my-q', utils.scope_queue_name('my-q', None))
-        self.assertEqual('123/my-q', utils.scope_queue_name('my-q', '123'))
+    def test_scope_name(self):
+        self.assertEqual('/my-q', utils.scope_name('my-q'))
+        self.assertEqual('/my-q', utils.scope_name('my-q', None))
+        self.assertEqual('123/my-q', utils.scope_name('my-q', '123'))
 
-        self.assertEqual('/', utils.scope_queue_name(None))
-        self.assertEqual('123/', utils.scope_queue_name(None, '123'))
+        self.assertEqual('/', utils.scope_name(None))
+        self.assertEqual('123/', utils.scope_name(None, '123'))
 
-    def test_descope_queue_name(self):
-        self.assertIsNone(utils.descope_queue_name('/'))
-        self.assertEqual('some-pig', utils.descope_queue_name('/some-pig'))
+    def test_descope_name(self):
+        self.assertIsNone(utils.descope_name('/'))
+        self.assertEqual('some-pig', utils.descope_name('/some-pig'))
         self.assertEqual('some-pig',
-                         utils.descope_queue_name('radiant/some-pig'))
+                         utils.descope_name('radiant/some-pig'))
 
     def test_calculate_backoff(self):
         sec = utils.calculate_backoff(0, 10, 2, 0)

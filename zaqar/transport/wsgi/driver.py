@@ -79,9 +79,9 @@ class Driver(transport.DriverBase):
         return helpers.verify_pre_signed_url(self._conf.signed_url.secret_key,
                                              req, resp, params)
 
-    def _validate_queue_identification(self, req, resp, params):
-        return helpers.validate_queue_identification(
-            self._validate.queue_identification, req, resp, params)
+    def _validate_identification(self, req, resp, params):
+        return helpers.validate_identification(
+            self._validate.identification, req, resp, params)
 
     @decorators.lazy_property(write=False)
     def before_hooks(self):
@@ -98,7 +98,7 @@ class Driver(transport.DriverBase):
             helpers.inject_context,
 
             # NOTE(kgriffs): Depends on project_id being extracted, above
-            self._validate_queue_identification
+            self._validate_identification
         ]
 
     def _init_routes(self):

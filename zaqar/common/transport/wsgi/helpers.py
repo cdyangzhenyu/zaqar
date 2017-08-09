@@ -129,7 +129,7 @@ def require_client_id(req, resp, params):
         get_client_uuid(req)
 
 
-def validate_queue_identification(validate, req, resp, params):
+def validate_identification(validate, req, resp, params):
     """Hook for validating the queue name and project id in requests.
 
     The queue name validation is short-circuited if 'queue_name' does
@@ -148,16 +148,18 @@ def validate_queue_identification(validate, req, resp, params):
     :param resp: Falcon response object
     :param params: Responder params dict
     """
-
     try:
-        validate(params['queue_name'],
+        name = params.get('queue_name', '') or params.get('topic_name', '')
+        if not name:
+            raise KeyError
+        validate(name,
                  params['project_id'])
     except KeyError:
         # NOTE(kgriffs): queue_name not in params, so nothing to do
         pass
     except validation.ValidationFailed:
         project = params['project_id']
-        queue = params['queue_name']
+        queue = name
         if six.PY2:
             queue = queue.decode('utf-8', 'replace')
 

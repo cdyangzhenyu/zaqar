@@ -180,7 +180,7 @@ class ClaimController(storage.Claim):
         # `expires` on messages that would
         # expire before claim.
         new_values = {'e': message_expiration, 't': message_ttl}
-        collection.update({'p_q': utils.scope_queue_name(queue, project),
+        collection.update({'p_q': utils.scope_name(queue, project),
                            'e': {'$lt': claim_expires_dt},
                            'c.id': oid},
                           {'$set': new_values},
@@ -230,7 +230,7 @@ class ClaimController(storage.Claim):
 
         # TODO(kgriffs): Create methods for these so we don't interact
         # with the messages collection directly (loose coupling)
-        scope = utils.scope_queue_name(queue, project)
+        scope = utils.scope_name(queue, project)
         collection = msg_ctrl._collection(queue, project)
         collection.update({'p_q': scope, 'c.id': cid},
                           {'$set': {'c': meta}},

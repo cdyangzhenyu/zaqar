@@ -152,7 +152,7 @@ def normalize_none_str(string_or_none):
     return '' if string_or_none is None else string_or_none
 
 
-def scope_queue_name(queue=None, project=None):
+def scope_name(queue=None, project=None):
     """Returns a scoped name for a queue based on project and queue.
 
     If only the project name is specified, a scope signifying "all queues"
@@ -170,7 +170,7 @@ def scope_queue_name(queue=None, project=None):
     return normalize_none_str(project) + '/' + normalize_none_str(queue)
 
 
-def descope_queue_name(scoped_name):
+def descope_name(scoped_name):
     """Returns the unscoped queue name, given a fully-scoped name."""
 
     # NOTE(kgriffs): scoped_name can be either '/', '/global-queue-name',
@@ -181,7 +181,7 @@ def descope_queue_name(scoped_name):
 def parse_scoped_project_queue(scoped_name):
     """Returns the project and queue name for a scoped catalogue entry.
 
-    :param scoped_name: a project/queue as given by :scope_queue_name:
+    :param scoped_name: a project/queue as given by :scope_name:
     :type scoped_name: six.text_type
     :returns: (project, queue)
     :rtype: (six.text_type, six.text_type)
@@ -189,7 +189,7 @@ def parse_scoped_project_queue(scoped_name):
     return scoped_name.split('/')
 
 
-def scoped_query(queue, project):
+def scoped_query(queue, project, key=None):
     """Returns a dict usable for querying for scoped project/queues.
 
     :param queue: name of queue to seek
@@ -201,9 +201,10 @@ def scoped_query(queue, project):
     :returns: query to issue
     :rtype: dict
     """
-    key = PROJ_QUEUE_KEY
+    if not key:
+        key = PROJ_QUEUE_KEY
     query = {}
-    scoped_name = scope_queue_name(queue, project)
+    scoped_name = scope_name(queue, project)
 
     if not scoped_name.startswith('/'):
         # NOTE(kgriffs): scoped queue, e.g., 'project-id/queue-name'

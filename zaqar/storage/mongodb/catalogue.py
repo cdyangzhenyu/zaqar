@@ -47,7 +47,7 @@ class CatalogueController(base.CatalogueBase):
 
     @utils.raises_conn_error
     def _insert(self, project, queue, pool, upsert):
-        key = utils.scope_queue_name(queue, project)
+        key = utils.scope_name(queue, project)
         return self._col.update({PRIMARY_KEY: key},
                                 {'$set': {'s': pool}}, upsert=upsert)
 
@@ -62,7 +62,7 @@ class CatalogueController(base.CatalogueBase):
     @utils.raises_conn_error
     def get(self, project, queue):
         fields = {'_id': 0}
-        key = utils.scope_queue_name(queue, project)
+        key = utils.scope_name(queue, project)
         entry = self._col.find_one({PRIMARY_KEY: key},
                                    projection=fields)
 
@@ -73,7 +73,7 @@ class CatalogueController(base.CatalogueBase):
 
     @utils.raises_conn_error
     def exists(self, project, queue):
-        key = utils.scope_queue_name(queue, project)
+        key = utils.scope_name(queue, project)
         return self._col.find_one({PRIMARY_KEY: key}) is not None
 
     def insert(self, project, queue, pool):
@@ -82,7 +82,7 @@ class CatalogueController(base.CatalogueBase):
 
     @utils.raises_conn_error
     def delete(self, project, queue):
-        self._col.remove({PRIMARY_KEY: utils.scope_queue_name(queue, project)},
+        self._col.remove({PRIMARY_KEY: utils.scope_name(queue, project)},
                          w=0)
 
     def update(self, project, queue, pool=None):

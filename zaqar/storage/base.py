@@ -441,6 +441,18 @@ class Topic(ControllerBase):
         return self._list(project, marker, limit, detailed)
 
     _list = abc.abstractmethod(lambda x: None)
+    
+    def create(self, name, metadata=None, project=None):
+        """Base method for topic creation.
+
+        :param name: The topic name
+        :param project: Project id
+        :returns: True if a topic was created and False
+            if it was updated.
+        """
+        return self._create(name, metadata, project)
+
+    _create = abc.abstractmethod(lambda x: None)
 
 
 @six.add_metaclass(abc.ABCMeta)

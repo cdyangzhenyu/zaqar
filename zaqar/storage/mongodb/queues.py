@@ -208,7 +208,7 @@ class QueueController(storage.Queue):
         marker_name = {}
 
         def normalizer(record):
-            queue = {'name': utils.descope_queue_name(record['p_q'])}
+            queue = {'name': utils.descope_name(record['p_q'])}
             marker_name['next'] = queue['name']
             if detailed:
                 queue['metadata'] = record['m']
@@ -245,7 +245,7 @@ class QueueController(storage.Queue):
             # "modified at" timestamp.
             counter = {'v': 1, 't': 0}
 
-            scoped_name = utils.scope_queue_name(name, project)
+            scoped_name = utils.scope_name(name, project)
             self._collection.insert({'p_q': scoped_name, 'm': metadata or {},
                                      'c': counter})
 
@@ -287,4 +287,4 @@ class QueueController(storage.Queue):
 
 
 def _get_scoped_query(name, project):
-    return {'p_q': utils.scope_queue_name(name, project)}
+    return {'p_q': utils.scope_name(name, project)}

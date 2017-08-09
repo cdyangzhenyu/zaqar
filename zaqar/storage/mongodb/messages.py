@@ -225,7 +225,7 @@ class MessageController(storage.Message):
         :param queue_name: name of the queue to purge
         :param project: ID of the project to which the queue belongs
         """
-        scope = utils.scope_queue_name(queue_name, project)
+        scope = utils.scope_name(queue_name, project)
         collection = self._collection(queue_name, project)
         collection.remove({PROJ_QUEUE: scope}, w=0)
 
@@ -267,7 +267,7 @@ class MessageController(storage.Message):
 
         query = {
             # Messages must belong to this queue and project.
-            PROJ_QUEUE: utils.scope_queue_name(queue_name, project),
+            PROJ_QUEUE: utils.scope_name(queue_name, project),
 
             # NOTE(kgriffs): Messages must be finalized (i.e., must not
             # be part of an unfinalized transaction).
@@ -319,7 +319,7 @@ class MessageController(storage.Message):
         """
         query = {
             # Messages must belong to this queue and project.
-            PROJ_QUEUE: utils.scope_queue_name(queue_name, project),
+            PROJ_QUEUE: utils.scope_name(queue_name, project),
 
             # NOTE(kgriffs): Messages must be finalized (i.e., must not
             # be part of an unfinalized transaction).
@@ -352,7 +352,7 @@ class MessageController(storage.Message):
             claim_id = {'$ne': None}
 
         query = {
-            PROJ_QUEUE: utils.scope_queue_name(queue_name, project),
+            PROJ_QUEUE: utils.scope_name(queue_name, project),
             'c.id': claim_id,
             'c.e': {'$gt': expires or timeutils.utcnow_ts()},
         }
@@ -393,7 +393,7 @@ class MessageController(storage.Message):
         # NOTE(cpp-cabrera):  unclaim by setting the claim ID to None
         # and the claim expiration time to now
         now = timeutils.utcnow_ts()
-        scope = utils.scope_queue_name(queue_name, project)
+        scope = utils.scope_name(queue_name, project)
         collection = self._collection(queue_name, project)
 
         collection.update({PROJ_QUEUE: scope, 'c.id': cid},
@@ -569,7 +569,7 @@ class MessageController(storage.Message):
 
         query = {
             '_id': mid,
-            PROJ_QUEUE: utils.scope_queue_name(queue_name, project),
+            PROJ_QUEUE: utils.scope_name(queue_name, project),
         }
 
         collection = self._collection(queue_name, project)
@@ -593,7 +593,7 @@ class MessageController(storage.Message):
         # Base query, always check expire time
         query = {
             '_id': {'$in': message_ids},
-            PROJ_QUEUE: utils.scope_queue_name(queue_name, project),
+            PROJ_QUEUE: utils.scope_name(queue_name, project),
         }
 
         collection = self._collection(queue_name, project)
@@ -633,7 +633,7 @@ class MessageController(storage.Message):
 
         prepared_messages = [
             {
-                PROJ_QUEUE: utils.scope_queue_name(queue_name, project),
+                PROJ_QUEUE: utils.scope_name(queue_name, project),
                 't': message['ttl'],
                 'e': now_dt + datetime.timedelta(seconds=message['ttl']),
                 'u': client_uuid,
@@ -663,7 +663,7 @@ class MessageController(storage.Message):
 
         query = {
             '_id': mid,
-            PROJ_QUEUE: utils.scope_queue_name(queue_name, project),
+            PROJ_QUEUE: utils.scope_name(queue_name, project),
         }
 
         cid = utils.to_oid(claim)
@@ -707,7 +707,7 @@ class MessageController(storage.Message):
         message_ids = [mid for mid in map(utils.to_oid, message_ids) if mid]
         query = {
             '_id': {'$in': message_ids},
-            PROJ_QUEUE: utils.scope_queue_name(queue_name, project),
+            PROJ_QUEUE: utils.scope_name(queue_name, project),
         }
 
         collection = self._collection(queue_name, project)
@@ -717,7 +717,7 @@ class MessageController(storage.Message):
     @utils.retries_on_autoreconnect
     def pop(self, queue_name, limit, project=None):
         query = {
-            PROJ_QUEUE: utils.scope_queue_name(queue_name, project),
+            PROJ_QUEUE: utils.scope_name(queue_name, project),
         }
 
         # Only include messages that are not part of
@@ -811,7 +811,7 @@ class FIFOMessageController(MessageController):
 
         prepared_messages = [
             {
-                PROJ_QUEUE: utils.scope_queue_name(queue_name, project),
+                PROJ_QUEUE: utils.scope_name(queue_name, project),
                 't': message['ttl'],
                 'e': now_dt + datetime.timedelta(seconds=message['ttl']),
                 'u': client_uuid,
@@ -1035,4 +1035,4 @@ class MessageQueueHandler(object):
 
 
 def _get_scoped_query(name, project):
-    return {'p_q': utils.scope_queue_name(name, project)}
+    return {'p_q': utils.scope_name(name, project)}
