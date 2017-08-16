@@ -579,6 +579,8 @@ class Endpoints(object):
                                                 None)
             queue_default_ttl = queue_meta.get('_default_message_ttl', None)
 
+            delay_ttl = queue_meta.get('delay_ttl', None)
+
             # TODO(flwang): To avoid any unexpected regression issue, we just
             # leave the _message_post_spec attribute of class as it's. It
             # should be removed in Newton release.
@@ -588,6 +590,9 @@ class Endpoints(object):
             else:
                 _message_post_spec = (('ttl', int, self._defaults.message_ttl),
                                       ('body', '*', None),)
+
+            if delay_ttl:
+                message_post_spec += (('delay_ttl', int, delay_ttl),)
             # Place JSON size restriction before parsing
             self._validate.message_length(len(str(messages)),
                                           max_msg_post_size=queue_max_msg_size)

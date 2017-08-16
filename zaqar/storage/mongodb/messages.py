@@ -231,7 +231,7 @@ class MessageController(storage.Message):
 
     def _list(self, queue_name, project=None, marker=None,
               echo=False, client_uuid=None, projection=None,
-              include_claimed=False, sort=1, limit=None):
+              include_claimed=False, sort=1, limit=None, include_delay=False):
         """Message document listing helper.
 
         :param queue_name: Name of the queue to list
@@ -289,6 +289,10 @@ class MessageController(storage.Message):
             # Only include messages that are not part of
             # any claim, or are part of an expired claim.
             query['c.e'] = {'$lte': now}
+
+        if not include_delay:
+            # Only include messages that are not delayed or an expired delayed.
+            query['d.e'] = {'$lte': now}
 
         # Construct the request
         cursor = collection.find(query,
@@ -630,7 +634,6 @@ class MessageController(storage.Message):
         next_marker = self._inc_counter(queue_name,
                                         project,
                                         amount=msgs_n) - msgs_n
-
         prepared_messages = [
             {
                 PROJ_QUEUE: utils.scope_name(queue_name, project),
@@ -641,6 +644,7 @@ class MessageController(storage.Message):
                 'b': message['body'] if 'body' in message else {},
                 'k': next_marker + index,
                 'tx': None,
+                'd': {'e': now + message['delay_ttl'],'t': message['delay_ttl']},
             }
 
             for index, message in enumerate(messages)
