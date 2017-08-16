@@ -238,4 +238,5 @@ def format_message_v1_1(message, base_path, claim_id=None):
         'ttl': message['ttl'],
         'age': message['age'],
         'body': message['body'],
+        'handle': message.get('handle', None)
     }

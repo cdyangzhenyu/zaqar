@@ -707,6 +707,19 @@ class MessageController(storage.Message):
 
     @utils.raises_conn_error
     @utils.retries_on_autoreconnect
+    def consume_delete(self, queue_name, consume_id, project=None):
+        cid = utils.to_oid(consume_id)
+        if cid is None:
+            return
+        collection = self._collection(queue_name, project)
+        query = {
+            'c_id': cid,
+            PROJ_QUEUE: utils.scope_name(queue_name, project),
+        }
+        collection.remove(query, w=0)
+
+    @utils.raises_conn_error
+    @utils.retries_on_autoreconnect
     def bulk_delete(self, queue_name, message_ids, project=None):
         message_ids = [mid for mid in map(utils.to_oid, message_ids) if mid]
         query = {
@@ -990,6 +1003,7 @@ def _basic_message(msg, now):
         'age': int(age),
         'ttl': msg['t'],
         'body': msg['b'],
+        'handle': str(msg['c_id']) if msg['c_id'] else None,
         'claim_id': str(msg['c']['id']) if msg['c']['id'] else None
     }
 

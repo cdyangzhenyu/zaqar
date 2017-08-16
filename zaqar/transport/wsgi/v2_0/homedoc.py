@@ -196,6 +196,20 @@ JSON_HOME = {
                 }
             }
         },
+        'rel/message_consume': {
+            'href-template': '/v2/queues/{queue_name}/consume{?limit,auto_delete}',
+            'href-vars': {
+                'queue_name': 'param/queue_name',
+                'limit': 'param/consume_limit',
+                'auto_delete': 'param/consume_auto_delete',
+            },
+            'hints': {
+                'allow': ['GET'],
+                'formats': {
+                    'application/json': {},
+                },
+            },
+        },
 
         # -----------------------------------------------------------------
         # Claims
