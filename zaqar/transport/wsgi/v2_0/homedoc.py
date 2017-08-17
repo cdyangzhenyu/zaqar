@@ -210,6 +210,32 @@ JSON_HOME = {
                 },
             },
         },
+        'rel/message_consume_delete': {
+            'href-template': '/v2/queues/{queue_name}/consume_delete{?ids}',
+            'href-vars': {
+                'queue_name': 'param/queue_name',
+                'ids': 'param/ids',
+            },
+            'hints': {
+                'allow': ['DELETE'],
+                'formats': {
+                    'application/json': {},
+                },
+            },
+        },
+        'rel/message_consume_delete': {
+            'href-template': '/v2/queues/{queue_name}/consume_delete/{handle}',
+            'href-vars': {
+                'queue_name': 'param/queue_name',
+                'handle': 'param/handle',
+            },
+            'hints': {
+                'allow': ['DELETE'],
+                'formats': {
+                    'application/json': {},
+                },
+            },
+        },
 
         # -----------------------------------------------------------------
         # Claims

@@ -94,11 +94,13 @@ def public_endpoints(driver, conf):
          messages.ItemResource(message_controller)),
 
         ('/queues/{queue_name}/consume',
-         consume.Resource(driver._wsgi_conf,
-                          driver._validate,
-                          message_controller,
-                          queue_controller,
-                          claim_controller)),
+         consume.CollectionResource(driver._wsgi_conf,
+                                    driver._validate,
+                                    message_controller,
+                                    queue_controller,
+                                    claim_controller)),
+        ('/queues/{queue_name}/consume/{handle}',
+         consume.ItemResource(message_controller)),
 
         # Claims Endpoints
         ('/queues/{queue_name}/claims',

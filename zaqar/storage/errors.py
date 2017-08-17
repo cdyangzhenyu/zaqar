@@ -105,6 +105,12 @@ class MessageDoesNotExist(DoesNotExist):
         super(MessageDoesNotExist, self).__init__(mid=mid, queue=queue,
                                                   project=project)
 
+class MessageHandleInvalid(DoesNotExist):
+
+    msg_format = (u'Message handle {mid} is invalid')
+
+    def __init__(self, mid):
+        super(MessageHandleInvalid, self).__init__(mid=mid)
 
 class ClaimDoesNotExist(DoesNotExist):
 
@@ -130,6 +136,14 @@ class MessageNotClaimed(NotPermitted):
 
     def __init__(self, mid):
         super(MessageNotClaimed, self).__init__(mid=mid)
+
+
+class MessageClaimedExpired(NotPermitted):
+
+    msg_format = u'Message handle {mid} is no longer claimed, the handle is expired.'
+
+    def __init__(self, mid):
+        super(MessageClaimedExpired, self).__init__(mid=mid)
 
 
 class MessageNotClaimedBy(NotPermitted):
