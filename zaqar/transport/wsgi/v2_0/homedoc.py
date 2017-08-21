@@ -78,7 +78,7 @@ JSON_HOME = {
                 'queue_name': 'param/queue_name',
             },
             'hints': {
-                'allow': ['POST'],
+                'allow': ['POST', 'DELETE'],
                 'formats': {
                     'application/json': {},
                 },
