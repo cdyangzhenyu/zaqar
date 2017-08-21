@@ -55,9 +55,6 @@ class ItemResource(object):
         try:
             resp_dict = self._queue_controller.get(queue_name,
                                                    project=project_id)
-            for meta, value in self._get_reserved_metadata().items():
-                if not resp_dict.get(meta, None):
-                    resp_dict[meta] = value
         except storage_errors.DoesNotExist as ex:
             LOG.debug(ex)
             raise wsgi_errors.HTTPNotFound(six.text_type(ex))
@@ -77,7 +74,7 @@ class ItemResource(object):
             # Place JSON size restriction before parsing
             self._validate.queue_metadata_length(req.content_length)
             # Deserialize queue metadata
-            metadata = None
+            metadata = {}
             if req.content_length:
                 document = wsgi_utils.deserialize(req.stream,
                                                   req.content_length)
@@ -88,6 +85,9 @@ class ItemResource(object):
             raise wsgi_errors.HTTPBadRequestAPI(six.text_type(ex))
 
         try:
+            for meta in self._reserved_metadata:
+                if meta not in metadata:
+                    metadata[meta] = self._validate.get_limit_conf_value(meta)
             created = self._queue_controller.create(queue_name,
                                                     metadata=metadata,
                                                     project=project_id)
