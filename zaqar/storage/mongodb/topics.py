@@ -83,17 +83,27 @@ class TopicController(storage.Topic):
     
     def _get(self, name, project=None):
         try:
-            return self.get_metadata(name, project)
+            return self.get_metadata(name, project, detailed=True)
         except errors.TopicDoesNotExist:
             return {}
         
     @utils.raises_conn_error
     @utils.retries_on_autoreconnect
-    def get_metadata(self, name, project=None):
+    def get_metadata(self, name, project=None, detailed=None):
         topic = self._collection.find_one(_get_scoped_query(name, project),
-                                          projection={'m': 1, '_id': 0})
+                                          projection={'m': 1, '_id': 0,
+                                                      'p_t': 1,
+                                                      'c_t':1, 'u_t':1,})
         if topic is None:
             raise errors.TopicDoesNotExist(name, project)
+        if detailed:
+            return {'topic': {
+                        'metadata': topic.get('m', {}),
+                        'name': utils.descope_name(topic['p_t']),
+                        'created_at': topic.get('c_t', None),
+                        'updated_at': topic.get('u_t', None)
+                        }
+                    }
 
         return topic.get('m', {})
 
@@ -115,6 +125,8 @@ class TopicController(storage.Topic):
             marker_name['next'] = topic['name']
             if detailed:
                 topic['metadata'] = record['m']
+                topic['created_at'] = record.get('c_t', None)
+                topic['updated_at'] = record.get('u_t', None)
             return topic
 
         yield utils.HookedCursor(cursor, normalizer)
@@ -124,10 +136,10 @@ class TopicController(storage.Topic):
     def _create(self, name, metadata=None, project=None):
         try:
             counter = {'v': 1, 't': 0}
-
+            now = timeutils.utcnow_ts()
             scoped_name = utils.scope_name(name, project)
             self._collection.insert({'p_t': scoped_name, 'm': metadata or {},
-                                     'c': counter})
+                                     'c': counter, 'c_t': now, 'u_t': now})
 
         except pymongo.errors.DuplicateKeyError:
             return False
