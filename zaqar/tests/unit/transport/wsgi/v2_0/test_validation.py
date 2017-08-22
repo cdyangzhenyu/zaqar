@@ -153,7 +153,7 @@ class TestValidation(base.V2Base):
                           body='{"_max_messages_post_size": 257}')
         self.assertEqual(falcon.HTTP_400, self.srmock.status)
 
-    def test_queue_patching(self):
+    def test_resource_patching(self):
         headers = {
             'Client-ID': str(uuid.uuid4()),
             'Content-Type': "application/openstack-messaging-v2.0-json-patch"

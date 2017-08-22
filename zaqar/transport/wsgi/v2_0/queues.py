@@ -179,7 +179,7 @@ class ItemResource(object):
             raise wsgi_errors.HTTPBadRequestBody(msg)
 
         try:
-            changes = self._validate.queue_patching(req, changes)
+            changes = self._validate.resource_patching(req, changes)
 
             # NOTE(Eva-i): using 'get_metadata' instead of 'get', so
             # QueueDoesNotExist error will be thrown in case of non-existent

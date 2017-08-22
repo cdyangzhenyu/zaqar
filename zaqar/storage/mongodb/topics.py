@@ -107,6 +107,18 @@ class TopicController(storage.Topic):
 
         return topic.get('m', {})
 
+    @utils.raises_conn_error
+    @utils.retries_on_autoreconnect
+    def set_metadata(self, name, metadata, project=None):
+        now = timeutils.utcnow_ts()
+        rst = self._collection.update(_get_scoped_query(name, project),
+                                      {'$set': {'m': metadata, 'u_t': now}},
+                                      multi=False,
+                                      manipulate=False)
+
+        if not rst['updatedExisting']:
+            raise errors.TopicDoesNotExist(name, project)
+
     def _list(self, project=None, marker=None,
               limit=storage.DEFAULT_TOPICS_PER_PAGE, detailed=False):
 

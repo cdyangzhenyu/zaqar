@@ -256,7 +256,7 @@ class Validator(object):
             msg = _(u'Limit must be at least 1 and no greater than {0}.')
             raise ValidationFailed(msg, self._limits_conf.max_topics_per_page)
 
-    def queue_patching(self, request, changes):
+    def resource_patching(self, request, changes):
         washed_changes = []
         content_types = {
             'application/openstack-messaging-v2.0-json-patch': 10,
