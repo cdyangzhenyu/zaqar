@@ -136,6 +136,9 @@ class MessageController(storage.Message):
             claim            ->     c
             client uuid      ->     u
             transaction      ->    tx
+            delay            ->     d
+            created_at       ->   c_t
+            consume          ->   c_m
     """
 
     def __init__(self, *args, **kwargs):
@@ -645,6 +648,8 @@ class MessageController(storage.Message):
                 'k': next_marker + index,
                 'tx': None,
                 'd': {'e': now + message['delay_ttl'],'t': message['delay_ttl']},
+                'c_t': now,
+                'cm': {'cc': 0}
             }
 
             for index, message in enumerate(messages)
@@ -1059,8 +1064,12 @@ def _basic_message(msg, now):
         'age': int(age),
         'ttl': msg['t'],
         'body': msg['b'],
-        'handle': str(msg['c_id']) if msg['c_id'] else None,
-        'claim_id': str(msg['c']['id']) if msg['c']['id'] else None
+        'handle': str(msg['c_id']) if msg.get('c_id', None) else None,
+        'claim_id': str(msg['c']['id']) if msg['c']['id'] else None,
+        'created_at': msg.get('c_t', None),
+        'first_consumed_at': msg.get('cm', {}).get('fc_t', None),
+        'consume_count': msg.get('cm', {}).get('cc', 0),
+        'next_consume_at': msg.get('cm', {}).get('nc_t', None),
     }
 
 

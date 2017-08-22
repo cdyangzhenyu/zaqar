@@ -155,8 +155,6 @@ class ClaimController(storage.Claim):
         if len(ids) == 0:
             return None, messages
 
-        now = timeutils.utcnow_ts()
-
         # NOTE(kgriffs): Set the claim field for
         # the active message batch, while also
         # filtering out any messages that happened
@@ -187,8 +185,16 @@ class ClaimController(storage.Claim):
                           upsert=False, multi=True)
 
         for _id in ids:
+            msg = msg_ctrl.get(queue, str(_id), project=project)
+            cm = {
+                'cc': msg['consume_count'] + 1,
+                'nc_t': claim_expires
+            }
+            if not msg.get('cm', {}).get('fc_t', None):
+                cm['fc_t'] = now
             collection.update({'_id': _id},
-                              {'$set': {'c_id': objectid.ObjectId()}},
+                              {'$set': {'c_id': objectid.ObjectId(),
+                                        'cm': cm}},
                                 upsert=False,
                                 multi=False)
 
