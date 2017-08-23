@@ -475,6 +475,18 @@ class Topic(ControllerBase):
 
     _delete = abc.abstractmethod(lambda x: None)
 
+    def exists(self, name, project=None):
+        """Base method for testing topic existence.
+
+        :param name: The topic name
+        :param project: Project id
+        :returns: True if a topic exists and False
+            if it does not.
+        """
+        return self._exists(name, project)
+
+    _exists = abc.abstractmethod(lambda x: None)
+
 
 @six.add_metaclass(abc.ABCMeta)
 class Message(ControllerBase):
