@@ -110,8 +110,8 @@ class SubscriptionController(base.Subscription):
         try:
             subscription_id = self._collection.insert({'s': source,
                                                        'u': subscriber,
-                                                       't': ttl,
-                                                       'e': expires,
+                                                       #'t': ttl,
+                                                       #'e': expires,
                                                        'o': options,
                                                        'p': project,
                                                        'c': confirmed})
@@ -189,7 +189,7 @@ def _basic_subscription(record, now):
         'id': str(oid),
         'source': record['s'],
         'subscriber': record['u'],
-        'ttl': record['t'],
+        'ttl': record.get('t', None),
         'age': int(age),
         'options': record['o'],
         'confirmed': confirmed,
