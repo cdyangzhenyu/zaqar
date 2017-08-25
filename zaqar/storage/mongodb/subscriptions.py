@@ -140,7 +140,16 @@ class SubscriptionController(base.Subscription):
             now_dt = datetime.datetime.utcfromtimestamp(now)
             expires = now_dt + datetime.timedelta(seconds=new_ttl)
             fields['e'] = expires
-
+        options = fields.get('o', {})
+        if options:
+            sub = self._collection.find_one({'_id': utils.to_oid(subscription_id),
+                                             'p': project,
+                                             's': topic})
+            sub_o = sub.get('o', {})
+            if sub_o:
+                for o_k in options:
+                    sub_o[o_k] = options[o_k]
+                fields['o'] = sub_o
         try:
             res = self._collection.update(
                 {'_id': utils.to_oid(subscription_id),
