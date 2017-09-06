@@ -179,6 +179,13 @@ class DataDriver(storage.DataDriverBase):
         return self.connection[name]
 
     @decorators.lazy_property(write=False)
+    def monitor_database(self):
+        """Database dedicated to the "monitors" collection.
+        """
+        name = self.mongodb_conf.database + '_monitors'
+        return self.connection[name]
+
+    @decorators.lazy_property(write=False)
     def connection(self):
         """MongoDB client connection instance."""
         return _connection(self.mongodb_conf)
@@ -208,6 +215,16 @@ class DataDriver(storage.DataDriverBase):
                 self.conf.profiler.trace_message_store):
             return profiler.trace_cls("mongodb_subscription_"
                                       "controller")(controller)
+        else:
+            return controller
+
+    @decorators.lazy_property(write=False)
+    def monitor_controller(self):
+        controller = controllers.MonitorController(self)
+        if (self.conf.profiler.enabled and
+                (self.conf.profiler.trace_message_store or
+                    self.conf.profiler.trace_management_store)):
+            return profiler.trace_cls("mongodb_monitors_controller")(controller)
         else:
             return controller
 
@@ -276,6 +293,17 @@ class ControlDriver(storage.ControlDriverBase):
         name = self.mongodb_conf.database + '_queues'
         return self.connection[name]
 
+    #@decorators.lazy_property(write=False)
+    #def monitors_database(self):
+    #    """Database dedicated to the "monitors" collection.
+    #
+    #    The monitors collection is separated out into its own database
+    #    to avoid writer lock contention with the messages collections.
+    #    """
+    #
+    #    name = self.mongodb_conf.database + '_monitors'
+    #    return self.connection[name]
+
     @decorators.lazy_property(write=False)
     def topic_controller(self):
         controller = controllers.TopicController(self)
@@ -295,6 +323,16 @@ class ControlDriver(storage.ControlDriverBase):
             return profiler.trace_cls("mongodb_queues_controller")(controller)
         else:
             return controller
+
+    #@decorators.lazy_property(write=False)
+    #def monitor_controller(self):
+    #    controller = controllers.MonitorController(self)
+    #    if (self.conf.profiler.enabled and
+    #            (self.conf.profiler.trace_message_store or
+    #                self.conf.profiler.trace_management_store)):
+    #        return profiler.trace_cls("mongodb_monitors_controller")(controller)
+    #    else:
+    #        return controller
 
     @property
     def pools_controller(self):

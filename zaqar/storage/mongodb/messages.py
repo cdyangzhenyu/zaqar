@@ -35,7 +35,7 @@ from zaqar.i18n import _LW
 from zaqar import storage
 from zaqar.storage import errors
 from zaqar.storage.mongodb import utils
-
+from zaqar.storage.mongodb import monitors
 
 LOG = logging.getLogger(__name__)
 
@@ -314,8 +314,9 @@ class MessageController(storage.Message):
     # "Friends" interface
     # ----------------------------------------------------------------------
 
-    def _count(self, queue_name, project=None, include_claimed=False):
-        """Return total number of messages in a queue.
+    def _count(self, queue_name, project=None,
+               include_claimed=False, include_delay=False):
+        """Return total number of active messages in a queue.
 
         This method is designed to very quickly count the number
         of messages in a given queue. Expired messages are not
@@ -341,6 +342,35 @@ class MessageController(storage.Message):
             # Exclude messages that are claimed
             query['c.e'] = {'$lte': timeutils.utcnow_ts()}
 
+        if not include_delay:
+            # Exclude messages that are delayed
+            query['d.e'] = {'$lte': timeutils.utcnow_ts()}
+
+        collection = self._collection(queue_name, project)
+        return collection.count(filter=query, hint=COUNTING_INDEX_FIELDS)
+
+    def _claimed_or_delay_count(self, queue_name, project=None,
+                                claimed=None, delayed=None):
+        """Return total number of claimed messages in a queue.
+
+        This method is designed to very quickly count the number
+        of claimed messages in a given queue. Expired messages are not
+        counted, of course. If the queue does not exist, the
+        count will always be 0.
+
+        Note: Some expired messages may be included in the count if
+            they haven't been GC'd yet. This is done for performance.
+        """
+        query = {
+            # Messages must belong to this queue and project.
+            PROJ_QUEUE: utils.scope_name(queue_name, project),
+            'tx': None,
+        }
+        if claimed:
+            query['c.e'] = {'$gte': timeutils.utcnow_ts()}
+
+        if delayed:
+            query['d.e'] = {'$gte': timeutils.utcnow_ts()}
         collection = self._collection(queue_name, project)
         return collection.count(filter=query, hint=COUNTING_INDEX_FIELDS)
 

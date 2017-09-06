@@ -34,7 +34,9 @@ class QueueTask(object):
         queue_max_msg_size = queue_meta.get('_max_messages_post_size', 65535)
         queue_default_ttl = queue_meta.get('_default_message_ttl', 3600)
         delay_ttl = queue_meta.get('delay_ttl', 0)
+        monitor_controller = kwargs.get('monitor_controller', None)
         new_messages = []
+        success = False
         for msg in messages:
             new_msg = {}
             new_msg['ttl'] = queue_default_ttl
@@ -49,6 +51,7 @@ class QueueTask(object):
                                             client_uuid=client_uuid)
             LOG.debug('Messages: %s publish for Subscription: %s Success. Message id is: %s ' %
                   (messages, subscription, message_ids))
+            success = True
         except Exception as e:    
             LOG.exception(_LE('queue task got exception: %s.') % str(e))
             retry_policy = subscription['options'].get('push_policy', None)
@@ -66,6 +69,7 @@ class QueueTask(object):
                                             messages=new_messages,
                                             project=project_id,
                                             client_uuid=client_uuid)
+                        success = True
                         break
                     except Exception as e:
                         LOG.debug(_LE('webhook task retry got exception: %s.') % str(e))
@@ -84,9 +88,18 @@ class QueueTask(object):
                                             messages=new_messages,
                                             project=project_id,
                                             client_uuid=client_uuid)
+                        success = True
                         break
                     except Exception as e:
                         LOG.debug(_LE('webhook task retry got exception: %s.') % str(e))
+
+        if success:
+            try:
+                monitor_controller.update(messages, subscription['source'],
+                                          project_id, 'subscribe_messages',
+                                          success=True)
+            except Exception as ex:
+                LOG.exception(ex)
 
     def register(self, subscriber, options, ttl, project_id, request_data):
         pass

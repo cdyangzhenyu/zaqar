@@ -31,12 +31,14 @@ class WebhookTask(object):
         headers.update(subscription['options'].get('post_headers', {}))
         retry_policy = subscription['options'].get('push_policy', None)
         conf = kwargs.get('conf', None)
+        project = kwargs.get('project', None)
+        monitor_controller = kwargs.get('monitor_controller', None)
         def _post_msg():
             for msg in messages:
                 # NOTE(Eva-i): Unfortunately this will add 'queue_name' key to
                 # our original messages(dicts) which will be later consumed in
                 # the storage controller. It seems safe though.
-                msg['queue_name'] = subscription['source']
+                msg['topic_name'] = subscription['source']
                 if 'post_data' in subscription['options']:
                     data = subscription['options']['post_data']
                     data = data.replace('"$zaqar_message$"', json.dumps(msg))
@@ -45,9 +47,15 @@ class WebhookTask(object):
                 requests.post(subscription['subscriber'],
                               data=data,
                               headers=headers)
+                try:
+                    monitor_controller.update(messages, subscription['source'],
+                                              project, 'subscribe_messages', success=True)
+                except Exception as ex:
+                    LOG.exception(ex)
 
         try:
             _post_msg()
+            pass
         except Exception as e:
             LOG.exception(_LE('webhook task got exception: %s.') % str(e))
             if retry_policy == 'BACKOFF_RETRY':
@@ -62,6 +70,8 @@ class WebhookTask(object):
                         break
                     except Exception as e:
                         LOG.debug(_LE('webhook task retry got exception: %s.') % str(e))
+                else:
+                    pass
             elif retry_policy == 'EXPONENTIAL_DECAY_RETRY':
                 for i in range(conf.notification.max_notifier_retries):
                     sleep_time = 2**i
@@ -76,6 +86,8 @@ class WebhookTask(object):
                         break
                     except Exception as e:
                         LOG.debug(_LE('webhook task retry got exception: %s.') % str(e))
+                else:
+                    pass
 
     def register(self, subscriber, options, ttl, project_id, request_data):
         pass

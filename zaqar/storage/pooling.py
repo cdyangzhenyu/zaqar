@@ -165,6 +165,15 @@ class DataDriver(storage.DataDriverBase):
         else:
             return controller
 
+    @decorators.lazy_property(write=False)
+    def monitor_controller(self):
+        controller = MonitorController(self._pool_catalog)
+        if self.conf.profiler.enabled:
+            return (profiler.trace_cls("pooling_monitor_controller")
+                    (controller))
+        else:
+            return controller
+
 
 class QueueController(storage.Queue):
     """Routes operations to a queue controller in the appropriate pool.
@@ -524,6 +533,46 @@ class SubscriptionController(storage.Subscription):
         control = self._get_controller(queue, project)
         if control:
             return control.get_with_subscriber(queue, subscriber, project)
+
+
+class MonitorController(storage.MonitorBase):
+    """Routes operations to a monitor controller in the appropriate pool.
+
+    :param pool_catalog: a catalog of available pools
+    :type pool_catalog: queues.pooling.base.Catalog
+    """
+
+    def __init__(self, pool_catalog):
+        super(MonitorController, self).__init__(None)
+        self._pool_catalog = pool_catalog
+        self._get_controller = self._pool_catalog.get_monitor_controller
+
+    def create(self, queue, metadata, project=None,
+               limit=storage.DEFAULT_MESSAGES_PER_CLAIM):
+        control = self._get_controller(queue, project)
+        if control:
+            return control.create(queue, metadata=metadata,
+                                  project=project, limit=limit)
+        return [None, []]
+
+    def list(self, m_type=None, project=None, marker=None, limit=10):
+        control = self._get_controller(queue, project)
+        if control:
+            return control.list(m_type=m_type, project=project,
+                                marker=marker, limit=limit)
+
+    def get(self, name, m_type, project):
+        control = self._get_controller(queue, project)
+        if control:
+            return control.get(name, m_type, project)
+        raise errors.MonitorDoesNotExist('%s/%s/%s' % (project, m_type, name))
+
+    def update(self, messages, name, project, count_type):
+        control = self._get_controller(queue, project)
+        if control:
+            return control.update(messages, name,
+                                  project, count_type)
+        raise errors.MonitorDoesNotExist('%s/%s/%s' % (project, count_type, name))
 
 
 class Catalog(object):
