@@ -237,6 +237,10 @@ class DataDriverBase(DriverBase):
         raise NotImplementedError
 
     @abc.abstractproperty
+    def lock_controller(self):
+        raise NotImplementedError
+
+    @abc.abstractproperty
     def message_controller(self):
         """Returns the driver's message controller."""
         raise NotImplementedError
@@ -1244,6 +1248,61 @@ class MonitorBase(ControllerBase):
         :param body: monitor value.
         :type body: dict
         :raises: MonitorDoesNotExist
+        """
+
+        raise NotImplementedError
+
+
+@six.add_metaclass(abc.ABCMeta)
+class LockBase(ControllerBase):
+    """A controller for managing locks."""
+
+    @abc.abstractmethod
+    def get(self, name, r_type, project, operation):
+        """Get the lock.
+
+        :param name: The name of this resource.
+        :type name: six.text_type
+        :param r_type: resource type for the lock.
+        :type r_type: six.text_type
+        :param project: Project this resource belongs to.
+        :type project: six.text_type
+        :param operation: Lock for different operation.
+        :type operation: six.text_type
+        :rtype: bool, return true if lock success else return false.
+        """
+
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def release(self, name, r_type, project, operation):
+        """Release the lock.
+
+        :param name: The name of this resource.
+        :type name: six.text_type
+        :param r_type: resource type for the lock.
+        :type r_type: six.text_type
+        :param project: Project this resource belongs to.
+        :type project: six.text_type
+        :param operation: Lock for different operation.
+        :type operation: six.text_type
+        """
+
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def is_locked(self, name, r_type, project, operation):
+        """Get the lock status. Return true if it is lock.
+
+        :param name: The name of this resource.
+        :type name: six.text_type
+        :param r_type: resource type for the lock.
+        :type r_type: six.text_type
+        :param project: Project this resource belongs to.
+        :type project: six.text_type
+        :param operation: Lock for different operation.
+        :type operation: six.text_type
+        :rtype: bool, return true if it is lock else return false.
         """
 
         raise NotImplementedError

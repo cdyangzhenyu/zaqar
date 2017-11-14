@@ -26,6 +26,7 @@ Message = base.Message
 Queue = base.Queue
 Topic = base.Topic
 MonitorBase = base.MonitorBase
+LockBase = base.LockBase
 Subscription = base.Subscription
 PoolsBase = base.PoolsBase
 FlavorsBase = base.FlavorsBase

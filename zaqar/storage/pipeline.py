@@ -25,7 +25,7 @@ from zaqar.storage import base
 
 LOG = logging.getLogger(__name__)
 
-_PIPELINE_RESOURCES = ('queue', 'topic', 'message',
+_PIPELINE_RESOURCES = ('queue', 'topic', 'message', 'lock',
                        'monitor', 'claim', 'subscription')
 
 _PIPELINE_CONFIGS = tuple((
@@ -153,6 +153,14 @@ class DataDriver(base.DataDriverBase):
                                            self.control_driver, self.conf)
         stages.extend(_get_storage_pipeline('monitor', self.conf))
         stages.append(self._storage.monitor_controller)
+        return common.Pipeline(stages)
+
+    @decorators.lazy_property(write=False)
+    def lock_controller(self):
+        stages = _get_builtin_entry_points('lock', self._storage,
+                                           self.control_driver, self.conf)
+        stages.extend(_get_storage_pipeline('lock', self.conf))
+        stages.append(self._storage.lock_controller)
         return common.Pipeline(stages)
 
     @decorators.lazy_property(write=False)

@@ -186,6 +186,13 @@ class DataDriver(storage.DataDriverBase):
         return self.connection[name]
 
     @decorators.lazy_property(write=False)
+    def lock_database(self):
+        """Database dedicated to the "locks" collection.
+        """
+        name = self.mongodb_conf.database + '_locks'
+        return self.connection[name]
+
+    @decorators.lazy_property(write=False)
     def connection(self):
         """MongoDB client connection instance."""
         return _connection(self.mongodb_conf)
@@ -226,6 +233,17 @@ class DataDriver(storage.DataDriverBase):
                     self.conf.profiler.trace_management_store)):
             return profiler. \
                 trace_cls("mongodb_monitors_controller")(controller)
+        else:
+            return controller
+
+    @decorators.lazy_property(write=False)
+    def lock_controller(self):
+        controller = controllers.LockController(self)
+        if (self.conf.profiler.enabled and
+                (self.conf.profiler.trace_message_store or
+                    self.conf.profiler.trace_management_store)):
+            return profiler. \
+                trace_cls("mongodb_locks_controller")(controller)
         else:
             return controller
 
