@@ -238,8 +238,9 @@ class CollectionResource(object):
             raise wsgi_errors.HTTPServiceUnavailable(description)
 
         try:
-            self._monitor_controller.update(messages, queue_name,
-                                            project_id, 'send_messages')
+            if message_ids:
+                self._monitor_controller.update(messages, queue_name,
+                                                project_id, 'send_messages')
         except Exception as ex:
             LOG.exception(ex)
 

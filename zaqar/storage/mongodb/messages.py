@@ -151,6 +151,7 @@ class MessageController(storage.Message):
         self._num_partitions = self.driver.mongodb_conf.partitions
         self._queue_ctrl = self.driver.queue_controller
         self._topic_ctrl = self.driver.topic_controller
+        self._lock_ctrl = self.driver.lock_controller
         self._retry_range = range(self.driver.mongodb_conf.max_attempts)
 
         # Create a list of 'messages' collections, one for each database
@@ -232,9 +233,16 @@ class MessageController(storage.Message):
         :param queue_name: name of the queue to purge
         :param project: ID of the project to which the queue belongs
         """
+        # Get a lock for purge.
+        lock = self._lock_ctrl.get(queue_name, 'queues',
+                                   project, 'purge')
+        if not lock:
+            return
         scope = utils.scope_queue_name(queue_name, project)
         collection = self._collection(queue_name, project)
         collection.remove({PROJ_QUEUE: scope}, w=0)
+        # Release the lock.
+        self._lock_ctrl.release(queue_name, 'queues', project, 'purge')
 
     def _list(self, queue_name, project=None, marker=None,
               echo=False, client_uuid=None, projection=None,
@@ -657,6 +665,16 @@ class MessageController(storage.Message):
         # autoreconnect, since we've a 2-step insert for messages.
         # The worst-case scenario is that we'll increase the counter
         # several times and we'd end up with some non-active messages.
+
+        # Get a lock for claim.
+        is_locked = self._lock_ctrl.is_locked(queue_name, 'queues',
+                                              project, 'purge')
+
+        if is_locked:
+            LOG.error('PURGE LOCK: The queue: %s in project: %s'
+                      'is purging, so can not post.' % (queue_name,
+                                                        project))
+            return []
 
         if not self._queue_ctrl.exists(queue_name, project):
             raise errors.QueueDoesNotExist(queue_name, project)
