@@ -195,11 +195,12 @@ class ClaimController(storage.Claim):
         # This sets the expiration time to
         # `expires` on messages that would
         # expire before claim.
-        new_values = {'e': message_expiration, 't': message_ttl}
+        new_values = {'e': message_expiration}
         collection.update({'p_q': utils.scope_queue_name(queue, project),
                            'e': {'$lt': claim_expires_dt},
                            'c.id': oid},
-                          {'$set': new_values},
+                          {'$set': new_values,
+                           '$inc': {'t': message_ttl}},
                           upsert=False, multi=True)
 
         if updated != 0:
@@ -259,8 +260,8 @@ class ClaimController(storage.Claim):
         collection.update({'p_q': scope,
                            'e': {'$lt': claim_expires_dt},
                            'c.id': cid},
-                          {'$set': {'e': message_expires,
-                                    't': message_ttl}},
+                          {'$set': {'e': message_expires},
+                           '$inc': {'t': message_ttl}},
                           upsert=False, multi=True)
 
     @utils.raises_conn_error
